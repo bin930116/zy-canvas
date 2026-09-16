@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>vip.xiaonuo</groupId>
+        <artifactId>zy-plugin</artifactId>
+        <version>3.0.0</version>
+    </parent>
+
+    <artifactId>zy-plugin-canvas</artifactId>
+    <packaging>jar</packaging>
+    <description>画布插件</description>
+
+    <dependencies>
+        <!-- 引入自己的对外接口 -->
+        <dependency>
+            <groupId>vip.xiaonuo</groupId>
+            <artifactId>zy-plugin-canvas-api</artifactId>
+        </dependency>
+        <!-- 引入登录鉴权接口，用于实现其C端登录所需逻辑 -->
+        <dependency>
+            <groupId>vip.xiaonuo</groupId>
+            <artifactId>zy-plugin-auth-api</artifactId>
+        </dependency>
+        <!-- 引入客户端用户API，用于获取用户信息 -->
+        <dependency>
+            <groupId>vip.xiaonuo</groupId>
+            <artifactId>zy-plugin-client-api</artifactId>
+        </dependency>
+        <!-- 引入文件引擎 API，用于生成媒体上传到系统默认文件引擎（MINIO） -->
+        <dependency>
+            <groupId>vip.xiaonuo</groupId>
+            <artifactId>zy-plugin-dev-api</artifactId>
+        </dependency>
+        <!-- 引入业务 API：C端系统公告查询 B 端 BizNotice -->
+        <dependency>
+            <groupId>vip.xiaonuo</groupId>
+            <artifactId>zy-plugin-biz-api</artifactId>
+        </dependency>
+    </dependencies>
+</project>

@@ -1,0 +1,281 @@
+import { lazy, Suspense, useEffect, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Alert, App, Tooltip } from "antd";
+import { ArrowLeft, BookOpenText, Clapperboard, Images, LayoutDashboard, LayoutGrid, Plus, Scissors, Settings2, type LucideIcon } from "lucide-react";
+import { Link, Navigate, useNavigate, useParams } from "react-router";
+
+import { getProjectCore, getProjectOverview, getProjectUnitWorkspace, linkCanvasUnit, listProjectUnits, createProjectAssetCandidates, replaceProjectUnitShots, type ProjectDetail } from "@/services/api/projects";
+import { listGenerationTasks, queryGenerationTask, type GenerationTask } from "@/services/api/task-center";
+import { WorkspacePage } from "@/components/layout/workspace-page";
+import { WorkspaceErrorState, WorkspaceLoadingState } from "@/components/layout/workspace-state";
+import { useWorkspaceTopBarExtension } from "@/components/layout/workspace-top-bar-extension";
+import { chapterTaskIdentity, chapterCharactersFromGenerationTask, chapterStoryboardFromGenerationTask } from "./detail/project-chapter-ai";
+import { storyboardRowsToProjectShots } from "./detail/chapter-storyboard-production";
+
+import { WorkflowChapterNavigator } from "./detail/workflow-chapter-navigator";
+
+const ProjectAssetsView = lazy(() => import("./detail/assets"));
+const ProjectCanvasesView = lazy(() => import("./detail/canvases"));
+const ProjectChaptersView = lazy(() => import("./detail/chapters"));
+const ProjectOverviewView = lazy(() => import("./detail/overview"));
+const ProjectSettingsView = lazy(() => import("./detail/settings"));
+const ProjectWorkflowView = lazy(() => import("./detail/workflow"));
+const ProjectEditorView = lazy(() => import("./detail/editor"));
+
+type DetailView = "overview" | "chapters" | "workflow" | "canvases" | "editor" | "assets" | "settings";
+
+const views: Array<{ key: DetailView; label: string; icon: LucideIcon }> = [
+    { key: "overview", label: "制作概览", icon: LayoutDashboard },
+    { key: "chapters", label: "剧情章节", icon: BookOpenText },
+    { key: "workflow", label: "分镜制作", icon: Clapperboard },
+    { key: "canvases", label: "项目画布", icon: LayoutGrid },
+    { key: "editor", label: "剪辑成片", icon: Scissors },
+    { key: "assets", label: "角色与资产", icon: Images },
+    { key: "settings", label: "项目设置", icon: Settings2 },
+];
+
+export default function ProjectDetailPage() {
+    const { projectId = "", view, chapterId, unitId, stage } = useParams();
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
+    const { message } = App.useApp();
+    const activeView: DetailView = unitId || view === "workflow" ? "workflow" : chapterId ? "chapters" : views.some((item) => item.key === view) ? view as DetailView : "overview";
+    const coreQuery = useQuery({
+        queryKey: ["project", projectId, "core"],
+        queryFn: () => getProjectCore(projectId),
+        enabled: Boolean(projectId),
+        refetchOnMount: "always",
+    });
+    const unitsQuery = useQuery({ queryKey: ["project", projectId, "units"], queryFn: () => listProjectUnits(projectId), enabled: Boolean(projectId) });
+    const units = unitsQuery.data?.units || [];
+    const firstUnitId = units.slice().sort((left, right) => left.position - right.position)[0]?.id || "";
+    const requestedUnitId = chapterId || unitId || "";
+    const activeUnitId = units.some((unit) => unit.id === requestedUnitId) ? requestedUnitId : firstUnitId;
+    const overviewQuery = useQuery({ queryKey: ["project", projectId, "overview"], queryFn: () => getProjectOverview(projectId), enabled: Boolean(projectId) && activeView === "overview" });
+    const workspaceQuery = useQuery({
+        queryKey: ["project", projectId, "unit-workspace", activeUnitId],
+        queryFn: () => getProjectUnitWorkspace(projectId, activeUnitId),
+        enabled: Boolean(projectId && activeUnitId) && (activeView === "chapters" || activeView === "workflow"),
+        refetchInterval: (query) => (query.state.data?.tasks || []).some((task) => task.clientContext?.shotId && (task.status === "queued" || task.status === "running")) ? 2_000 : false,
+    });
+    const project = coreQuery.data?.project;
+    const workspace = workspaceQuery.data;
+    const detail: ProjectDetail | undefined = project ? {
+        project,
+        units: workspace?.unit ? units.map((unit) => unit.id === workspace.unit.id ? workspace.unit : unit) : units,
+        canvases: [],
+        canvasUnitLinks: [],
+        unitCanvasCounts: unitsQuery.data?.canvasCounts || {},
+        assets: workspace?.assets || [],
+        assetFolders: [],
+        workflows: workspace?.workflows || [],
+        shots: workspace?.shots || [],
+        shotRevisions: workspace?.shotRevisions || [],
+        shotArtifacts: workspace?.shotArtifacts || [],
+        shotReferences: workspace?.shotReferences || [],
+        assetCandidates: workspace?.assetCandidates || [],
+        tasks: workspace?.tasks || [],
+    } : undefined;
+    const refreshProject = () => { void queryClient.invalidateQueries({ queryKey: ["project", projectId] }); void queryClient.invalidateQueries({ queryKey: ["projects"] }); };
+    const chapterTasksQuery = useQuery({
+        queryKey: ["project-chapter-generation-tasks", projectId],
+        queryFn: () => listGenerationTasks(100, { projectId }),
+        enabled: Boolean(projectId),
+        refetchInterval: (query) => (query.state.data || []).some((task) => {
+            const identity = chapterTaskIdentity(task);
+            return Boolean(identity && (task.status === "queued" || task.status === "running"));
+        }) ? 2_000 : false,
+        refetchOnWindowFocus: true,
+    });
+    // 项目级任务结果恢复：不依赖章节页挂载，任何子视图下都能把已完成但未落库的
+    // 角色提取 / 分镜生成结果补存到资产与分镜（与章节页本地恢复通过后端幂等互斥）
+    const recoveredChapterTaskIdsRef = useRef(new Set<string>());
+    const failedRecoveryTaskIdsRef = useRef<Set<string>>(loadFailedRecoveryTaskIds());
+    useEffect(() => {
+        if (!detail) return;
+        const latestByOperation = new Map<string, { task: GenerationTask; chapterId: string; kind: "characters" | "storyboard" }>();
+        for (const task of chapterTasksQuery.data || []) {
+            const identity = chapterTaskIdentity(task);
+            if (!identity) continue;
+            const key = `${identity.chapterId}:${identity.kind}`;
+            if (!latestByOperation.has(key)) latestByOperation.set(key, { task, ...identity });
+        }
+        for (const { task, chapterId, kind } of latestByOperation.values()) {
+            if (task.status !== "succeeded" || recoveredChapterTaskIdsRef.current.has(task.id) || failedRecoveryTaskIdsRef.current.has(task.id)) continue;
+            if (chapterTaskResultAlreadyApplied(task, chapterId, kind, detail)) {
+                recoveredChapterTaskIdsRef.current.add(task.id);
+                continue;
+            }
+            recoveredChapterTaskIdsRef.current.add(task.id);
+            void queryGenerationTask(task.id).then(async (completedTask) => {
+                if (kind === "characters") {
+                    const characters = chapterCharactersFromGenerationTask(completedTask);
+                    if (!characters.length) return;
+                    const created = await createProjectAssetCandidates(detail.project.id, characters.map((character) => ({ unitId: chapterId, name: character.name, category: "character", details: { ...character } })), "chapter_character_extract");
+                    if (!created.candidates?.length) return;
+                    message.success(`已恢复 ${characters.length} 个提取角色到资产确认列表`);
+                } else {
+                    const rows = chapterStoryboardFromGenerationTask(completedTask).rows;
+                    if (!rows.length) return;
+                    const shots = storyboardRowsToProjectShots(rows, detail);
+                    await replaceProjectUnitShots(detail.project.id, chapterId, shots, detail.shots.filter((shot) => shot.unitId === chapterId).map((shot) => shot.id));
+                    message.success(`已恢复 ${shots.length} 个章节分镜`);
+                }
+                refreshProject();
+            }).catch((error) => {
+                failedRecoveryTaskIdsRef.current.add(task.id);
+                try { sessionStorage.setItem("failed-chapter-recovery-task-ids", JSON.stringify([...failedRecoveryTaskIdsRef.current])); } catch { /* ignore */ }
+                message.error(error instanceof Error ? `任务结果恢复失败：${error.message}` : "任务结果恢复失败");
+            });
+        }
+    }, [chapterTasksQuery.data, detail]);
+    const createCanvas = async () => {
+        if (detail?.project.status === "archived") { message.warning("项目已归档，请先在项目设置中恢复"); return; }
+        const activeChapterId = chapterId || sessionStorage.getItem(`project-active-chapter:${projectId}`) || "";
+        const unit = activeView === "chapters"
+            ? detail?.units.find((item) => item.id === activeChapterId) || detail?.units.slice().sort((left, right) => left.position - right.position)[0]
+            : undefined;
+        const shots = unit ? detail?.shots.filter((shot) => shot.unitId === unit.id) || [] : [];
+        try {
+            const [{ createCanvasProjectWithRemoteSync }, storyboard] = await Promise.all([
+                import("@/services/user-data-sync"),
+                unit && shots.length ? import("@/lib/canvas/project-chapter-storyboard") : Promise.resolve(null),
+            ]);
+            const seed = unit && shots.length ? storyboard?.upsertProjectChapterStoryboard([], [], { unit, shots }) : undefined;
+            const initialContent = seed ? { nodes: seed.nodes, connections: seed.connections } : undefined;
+            const title = unit ? `${unit.title} · ${shots.length ? "分镜画布" : "画布"}` : `${detail?.project.name || "项目"} · 新画布`;
+            const { id, syncError } = await createCanvasProjectWithRemoteSync(title, projectId, initialContent);
+            if (syncError) {
+                message.warning(syncError instanceof Error ? `画布已保存在本地12，项目关联稍后重试：${syncError.message}` : "画布已保存在本地，项目关联稍后重试");
+                navigate(`/canvas/${id}`);
+                return;
+            }
+            if (unit) {
+                try {
+                    await linkCanvasUnit(projectId, { canvasId: id, unitId: unit.id, role: "storyboard" });
+                } catch (error) {
+                    refreshProject();
+                    message.error(error instanceof Error ? `画布已创建，但章节关联失败：${error.message}` : "画布已创建，但章节关联失败");
+                    return;
+                }
+            }
+            refreshProject();
+            message.success(unit && shots.length ? `已创建章节画布并导入 ${shots.length} 个分镜` : unit ? "章节画布已创建并关联" : "项目画布已创建");
+            navigate(`/canvas/${id}`);
+        } catch (error) {
+            message.error(error instanceof Error ? error.message : "画布创建失败");
+        }
+    };
+    const chapterHref = detail ? projectChapterHref(detail.units, projectId, chapterId) : `/projects/${projectId}/chapters`;
+    const workflowHref = detail ? projectWorkflowHref(detail.units, projectId, unitId, stage) : `/projects/${projectId}/workflow`;
+    useWorkspaceTopBarExtension(detail ? (
+        <ProjectWorkspaceTopBar
+            detail={detail}
+            projectId={projectId}
+            activeView={activeView}
+            unitId={unitId}
+            stage={stage}
+            chapterHref={chapterHref}
+            workflowHref={workflowHref}
+            onCreateCanvas={createCanvas}
+        />
+    ) : null);
+    if (coreQuery.isLoading || unitsQuery.isLoading) return <WorkspacePage><WorkspaceLoadingState label="正在打开项目工作台" detail="读取项目与章节索引" /></WorkspacePage>;
+    if (coreQuery.isError || unitsQuery.isError || !detail) return <WorkspacePage><WorkspaceErrorState title="项目不可用" description="项目不存在、已被删除，或当前账号没有访问权限。" actionLabel="返回项目中心" onRetry={() => navigate("/projects")} /></WorkspacePage>;
+    if (!chapterId && !unitId && (!view || !views.some((item) => item.key === view))) return <Navigate to={`/projects/${projectId}/overview`} replace />;
+    if (chapterId && !units.some((unit) => unit.id === chapterId)) return <Navigate to={firstUnitId ? `/projects/${projectId}/chapters/${firstUnitId}` : `/projects/${projectId}/chapters`} replace />;
+    if (unitId && !units.some((unit) => unit.id === unitId)) return <Navigate to={firstUnitId ? `/projects/${projectId}/workflow/${firstUnitId}/${stage || "video"}` : `/projects/${projectId}/workflow`} replace />;
+    if (activeView === "workflow" && !unitId && detail.units.length) return <Navigate to={`/projects/${projectId}/workflow/${detail.units.slice().sort((left, right) => left.position - right.position)[0].id}/video`} replace />;
+    return (
+        <WorkspacePage className="project-workbench-page !overflow-hidden" fluid>
+            <div className="flex h-full min-h-0 flex-col">
+                {detail.project.status === "archived" ? <Alert type="warning" showIcon banner message="项目已归档，恢复后才能创建画布和生成任务" className="!border-x-0 !border-t-0" /> : null}
+                <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                    <div className={activeView === "chapters" || activeView === "workflow" || activeView === "editor" ? "min-h-0 flex-1" : "thin-scrollbar min-h-0 flex-1 overflow-y-auto px-3 py-5 sm:px-5 lg:px-8 lg:py-7"}>
+                        <Suspense fallback={<WorkspaceLoadingState label="正在准备当前项目视图" detail="只加载当前使用的工作区模块" />}>
+                            <div className={activeView === "overview" ? "w-full" : activeView === "chapters" || activeView === "workflow" || activeView === "editor" ? "h-full w-full" : "w-full"}>
+                                {activeView === "overview" ? overviewQuery.isLoading ? <WorkspaceLoadingState label="正在统计制作进度" detail="只读取聚合数据，不加载全部镜头历史" /> : overviewQuery.data ? <ProjectOverviewView detail={detail} overview={overviewQuery.data} refreshProject={refreshProject} onCreateCanvas={createCanvas} /> : <WorkspaceErrorState title="制作概览读取失败" description="请稍后重试。" onRetry={() => void overviewQuery.refetch()} /> : null}
+                                {activeView === "chapters" ? workspaceQuery.isLoading ? <WorkspaceLoadingState label="正在读取当前章节" detail="正文与制作数据按章节加载" /> : workspaceQuery.isError ? <WorkspaceErrorState title="章节读取失败" description="当前章节可能已被删除，或服务暂时不可用。" onRetry={() => void workspaceQuery.refetch()} /> : <ProjectChaptersView detail={detail} refreshProject={refreshProject} onCreateCanvas={createCanvas} /> : null}
+                                {activeView === "workflow" ? workspaceQuery.isLoading ? <WorkspaceLoadingState label="正在读取当前章节分镜" detail="仅加载本章镜头、版本和产物" /> : workspaceQuery.isError ? <WorkspaceErrorState title="分镜工作区读取失败" description="当前章节制作数据暂时不可用。" onRetry={() => void workspaceQuery.refetch()} /> : <ProjectWorkflowView detail={detail} projectId={projectId} unitId={unitId || ""} stage={stage || "video"} /> : null}
+                                {activeView === "canvases" ? <ProjectCanvasesView detail={detail} refreshProject={refreshProject} onCreateCanvas={createCanvas} /> : null}
+                                {activeView === "assets" ? <ProjectAssetsView detail={detail} refreshProject={refreshProject} onCreateCanvas={createCanvas} /> : null}
+                                {activeView === "settings" ? <ProjectSettingsView detail={detail} refreshProject={refreshProject} onCreateCanvas={createCanvas} /> : null}
+                                {activeView === "editor" ? <ProjectEditorView detail={detail} /> : null}
+                            </div>
+                        </Suspense>
+                    </div>
+                </main>
+            </div>
+        </WorkspacePage>
+    );
+}
+
+function ProjectWorkspaceTopBar({ detail, projectId, activeView, unitId, stage, chapterHref, workflowHref, onCreateCanvas }: { detail: ProjectDetail; projectId: string; activeView: DetailView; unitId?: string; stage?: string; chapterHref: string; workflowHref: string; onCreateCanvas: () => void }) {
+    const navigate = useNavigate();
+    const createCanvasLabel = activeView === "chapters" && detail.units.length ? "新建当前章节画布" : "新建项目画布";
+    return (
+        <div className="project-workspace-topbar">
+            <button type="button" onClick={() => navigate("/projects")} className="project-workspace-back" aria-label="返回项目" title="返回项目"><ArrowLeft /></button>
+            <div className="project-workspace-identity">
+                <h1 title={detail.project.name}>{detail.project.name}</h1>
+                <span className={`project-workspace-status-dot ${detail.project.status === "archived" ? "is-archived" : ""}`} />
+                <span className="project-workspace-status-label">{detail.project.status === "archived" ? "已归档" : "进行中"}</span>
+            </div>
+            <nav className="project-workspace-tabs thin-scrollbar" aria-label="项目导航">
+                {views.map((item) => {
+                    const Icon = item.icon;
+                    const active = item.key === activeView;
+                    const href = item.key === "chapters" ? chapterHref : item.key === "workflow" ? workflowHref : `/projects/${projectId}/${item.key}`;
+                    return (
+                        <Tooltip key={item.key} title={item.label} mouseEnterDelay={0.15}>
+                            <Link
+                                to={href}
+                                aria-label={item.label}
+                                aria-current={active ? "page" : undefined}
+                                className={`project-workspace-tab ${active ? "is-active" : ""}`}
+                            >
+                                <Icon />
+                                <span>{item.label}</span>
+                            </Link>
+                        </Tooltip>
+                    );
+                })}
+            </nav>
+            {activeView === "workflow" ? (
+                <WorkflowChapterNavigator projectId={projectId} units={detail.units} unitId={unitId} stage={stage} />
+            ) : (
+                <Tooltip title={createCanvasLabel} mouseEnterDelay={0.15}><button type="button" onClick={onCreateCanvas} className="project-workspace-create" aria-label={createCanvasLabel}><Plus /></button></Tooltip>
+            )}
+        </div>
+    );
+}
+
+function projectWorkflowHref(units: Array<{ id: string; position: number }>, projectId: string, routeUnitId?: string, routeStage?: string) {
+    const targetId = [routeUnitId, sessionStorage.getItem(`project-active-chapter:${projectId}`) || ""].find((id) => id && units.some((unit) => unit.id === id)) || units.slice().sort((left, right) => left.position - right.position)[0]?.id;
+    return targetId ? `/projects/${projectId}/workflow/${targetId}/${routeStage || "video"}` : `/projects/${projectId}/workflow`;
+}
+
+function projectChapterHref(units: Array<{ id: string; position: number }>, projectId: string, routeChapterId?: string) {
+    const rememberedId = sessionStorage.getItem(`project-active-chapter:${projectId}`) || "";
+    const targetId = [routeChapterId, rememberedId].find((id) => id && units.some((unit) => unit.id === id)) || units.slice().sort((left, right) => left.position - right.position)[0]?.id;
+    return targetId ? `/projects/${projectId}/chapters/${targetId}` : `/projects/${projectId}/chapters`;
+}
+
+function chapterTaskResultAlreadyApplied(task: GenerationTask, chapterId: string, kind: "characters" | "storyboard", detail: ProjectDetail) {
+    const completedAt = Date.parse(task.completedAt || task.updatedAt);
+    if (!Number.isFinite(completedAt)) return false;
+    const updatedAt = kind === "characters"
+        ? detail.assetCandidates.filter((candidate) => candidate.unitId === chapterId && candidate.category === "character").map((candidate) => Date.parse(candidate.updatedAt))
+        : detail.shots.filter((shot) => shot.unitId === chapterId).map((shot) => Date.parse(shot.updatedAt));
+    return updatedAt.some((timestamp) => Number.isFinite(timestamp) && timestamp >= completedAt);
+}
+function loadFailedRecoveryTaskIds(): Set<string> {
+    try {
+        const raw = sessionStorage.getItem("failed-chapter-recovery-task-ids");
+        if (!raw) return new Set();
+        const parsed: unknown = JSON.parse(raw);
+        return new Set(Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : []);
+    } catch {
+        return new Set();
+    }
+}

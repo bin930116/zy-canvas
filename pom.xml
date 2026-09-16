@@ -4,10 +4,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>vip.xiaonuo</groupId>
-    <artifactId>snowy</artifactId>
-    <name>snowy</name>
+    <artifactId>zy</artifactId>
+    <name>zy</name>
     <version>3.0.0</version>
-    <description>snowy快速开发平台</description>
+    <description>zy快速开发平台</description>
     <packaging>pom</packaging>
 
     <parent>
@@ -58,7 +58,7 @@
         <sa-token.version>1.44.0</sa-token.version>
         <sm-crypto.version>0.3.2</sm-crypto.version>
         <sms4j.version>3.3.4</sms4j.version>
-        <snowy.version>3.0.0</snowy.version>
+        <zy.version>3.0.0</zy.version>
         <spring-boot.version>3.5.9</spring-boot.version>
         <spring-framework.version>6.2.15</spring-framework.version>
         <tencentcloud-ses.version>3.1.944</tencentcloud-ses.version>
@@ -70,16 +70,16 @@
 
     <modules>
         <!-- 基础通用规则模块 -->
-        <module>snowy-common</module>
+        <module>zy-common</module>
 
         <!-- 插件模块 -->
-        <module>snowy-plugin</module>
+        <module>zy-plugin</module>
 
         <!-- 插件API接口模块 -->
-        <module>snowy-plugin-api</module>
+        <module>zy-plugin-api</module>
 
         <!-- 主启动模块 -->
-        <module>snowy-web-app</module>
+        <module>zy-web-app</module>
     </modules>
 
     <repositories>
@@ -98,109 +98,123 @@
     <dependencyManagement>
         <dependencies>
 
-            <!-- snowy-common -->
+            <!-- zy-common -->
             <dependency>
                 <groupId>vip.xiaonuo</groupId>
-                <artifactId>snowy-common</artifactId>
-                <version>${snowy.version}</version>
+                <artifactId>zy-common</artifactId>
+                <version>${zy.version}</version>
             </dependency>
 
-            <!-- snowy-plugin-auth-api -->
+            <!-- zy-plugin-auth-api -->
             <dependency>
                 <groupId>vip.xiaonuo</groupId>
-                <artifactId>snowy-plugin-auth-api</artifactId>
-                <version>${snowy.version}</version>
+                <artifactId>zy-plugin-auth-api</artifactId>
+                <version>${zy.version}</version>
             </dependency>
 
-            <!-- snowy-plugin-biz-api -->
+            <!-- zy-plugin-biz-api -->
             <dependency>
                 <groupId>vip.xiaonuo</groupId>
-                <artifactId>snowy-plugin-biz-api</artifactId>
-                <version>${snowy.version}</version>
+                <artifactId>zy-plugin-biz-api</artifactId>
+                <version>${zy.version}</version>
             </dependency>
 
-            <!-- snowy-plugin-client-api -->
+            <!-- zy-plugin-client-api -->
             <dependency>
                 <groupId>vip.xiaonuo</groupId>
-                <artifactId>snowy-plugin-client-api</artifactId>
-                <version>${snowy.version}</version>
+                <artifactId>zy-plugin-client-api</artifactId>
+                <version>${zy.version}</version>
             </dependency>
 
-            <!-- snowy-plugin-dev-api -->
+            <!-- zy-plugin-dev-api -->
             <dependency>
                 <groupId>vip.xiaonuo</groupId>
-                <artifactId>snowy-plugin-dev-api</artifactId>
-                <version>${snowy.version}</version>
+                <artifactId>zy-plugin-dev-api</artifactId>
+                <version>${zy.version}</version>
             </dependency>
 
-            <!-- snowy-plugin-gen-api -->
+            <!-- zy-plugin-gen-api -->
             <dependency>
                 <groupId>vip.xiaonuo</groupId>
-                <artifactId>snowy-plugin-gen-api</artifactId>
-                <version>${snowy.version}</version>
+                <artifactId>zy-plugin-gen-api</artifactId>
+                <version>${zy.version}</version>
             </dependency>
 
-            <!-- snowy-plugin-mobile-api -->
+            <!-- zy-plugin-mobile-api -->
             <dependency>
                 <groupId>vip.xiaonuo</groupId>
-                <artifactId>snowy-plugin-mobile-api</artifactId>
-                <version>${snowy.version}</version>
+                <artifactId>zy-plugin-mobile-api</artifactId>
+                <version>${zy.version}</version>
             </dependency>
 
-            <!-- snowy-plugin-sys-api -->
+            <!-- zy-plugin-sys-api -->
             <dependency>
                 <groupId>vip.xiaonuo</groupId>
-                <artifactId>snowy-plugin-sys-api</artifactId>
-                <version>${snowy.version}</version>
+                <artifactId>zy-plugin-sys-api</artifactId>
+                <version>${zy.version}</version>
             </dependency>
 
-            <!-- snowy-plugin-auth -->
+            <!-- zy-plugin-auth -->
             <dependency>
                 <groupId>vip.xiaonuo</groupId>
-                <artifactId>snowy-plugin-auth</artifactId>
-                <version>${snowy.version}</version>
+                <artifactId>zy-plugin-auth</artifactId>
+                <version>${zy.version}</version>
             </dependency>
 
-            <!-- snowy-plugin-biz -->
+            <!-- zy-plugin-biz -->
             <dependency>
                 <groupId>vip.xiaonuo</groupId>
-                <artifactId>snowy-plugin-biz</artifactId>
-                <version>${snowy.version}</version>
+                <artifactId>zy-plugin-biz</artifactId>
+                <version>${zy.version}</version>
             </dependency>
 
-            <!-- snowy-plugin-client -->
+            <!-- zy-plugin-client -->
             <dependency>
                 <groupId>vip.xiaonuo</groupId>
-                <artifactId>snowy-plugin-client</artifactId>
-                <version>${snowy.version}</version>
+                <artifactId>zy-plugin-client</artifactId>
+                <version>${zy.version}</version>
             </dependency>
 
-            <!-- snowy-plugin-dev -->
+            <!-- zy-plugin-dev -->
             <dependency>
                 <groupId>vip.xiaonuo</groupId>
-                <artifactId>snowy-plugin-dev</artifactId>
-                <version>${snowy.version}</version>
+                <artifactId>zy-plugin-dev</artifactId>
+                <version>${zy.version}</version>
             </dependency>
 
-            <!-- snowy-plugin-gen -->
+            <!-- zy-plugin-gen -->
             <dependency>
                 <groupId>vip.xiaonuo</groupId>
-                <artifactId>snowy-plugin-gen</artifactId>
-                <version>${snowy.version}</version>
+                <artifactId>zy-plugin-gen</artifactId>
+                <version>${zy.version}</version>
             </dependency>
 
-            <!-- snowy-plugin-mobile -->
+            <!-- zy-plugin-mobile -->
             <dependency>
                 <groupId>vip.xiaonuo</groupId>
-                <artifactId>snowy-plugin-mobile</artifactId>
-                <version>${snowy.version}</version>
+                <artifactId>zy-plugin-mobile</artifactId>
+                <version>${zy.version}</version>
             </dependency>
 
-            <!-- snowy-plugin-sys -->
+            <!-- zy-plugin-sys -->
             <dependency>
                 <groupId>vip.xiaonuo</groupId>
-                <artifactId>snowy-plugin-sys</artifactId>
-                <version>${snowy.version}</version>
+                <artifactId>zy-plugin-sys</artifactId>
+                <version>${zy.version}</version>
+            </dependency>
+
+            <!-- zy-plugin-canvas-api -->
+            <dependency>
+                <groupId>vip.xiaonuo</groupId>
+                <artifactId>zy-plugin-canvas-api</artifactId>
+                <version>${zy.version}</version>
+            </dependency>
+
+            <!-- zy-plugin-canvas -->
+            <dependency>
+                <groupId>vip.xiaonuo</groupId>
+                <artifactId>zy-plugin-canvas</artifactId>
+                <version>${zy.version}</version>
             </dependency>
 
             <!-- nashorn-core -->
