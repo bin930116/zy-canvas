@@ -1,369 +1,99 @@
-<div align="center">
-    <p align="center">
-        <img src="./snowy-admin-web/public/img/logo.png" height="150" alt="logo"/>
-    </p>
-</div>
+# 影策 AI 影视创作平台（zy）
 
-## 框架介绍
+面向短剧与 AI 影视创作的**一体化创作平台**：以 AI 画布为核心，串联创意、分镜、素材资产、技能库与智能体，对接大模型与文/图/视频生成能力，形成从创意到成片的创作流水线。
 
-Snowy（SnowyAdmin）是国内首个国密前后端分离快速开发平台，集成国密加解密插件，
-软件层面完全符合等保测评要求，同时实现国产化机型、中间件、数据库适配，是您的不二之选！
-将国密能力内置于技术框架底层，让密码技术从"专业门槛"变为"开箱即用"，真正实现业务安全从底层做起。
-历经多年开源社区打磨与企业客户实践验证，新版本在大数据处理能力与安全体系方面实现了全面升级。
+基于开源框架 **Snowy 3.0**（Spring Boot 3 插件化快速开发平台）与开源画布 **infinite-canvas** 二次开发，后端模块已统一品牌化为 `zy-*`。
 
-采用SpringBoot+MybatisPlus+AntDesignVue+Vite 等更多组件及前沿技术开发，注释丰富，代码简洁，开箱即用！
+---
 
-Snowy谐音“小诺”，恰应小诺团队名称；意思为”下雪的、纯洁的“，寓意框架追求简洁至上，大道至简。
+## 技术栈
 
-<p align="center">     
-    <p align="center">
-        <a href="https://gitcode.com/xiaonuobase/Snowy">
-            <img src="https://gitcode.com/xiaonuobase/Snowy/star/badge.svg" alt="bootstrap">
-        </a>
-        <a href="https://gitee.com/xiaonuobase/snowy">
-            <img src="https://gitee.com/xiaonuobase/snowy/badge/star.svg?theme=dark" alt="Gitee star">
-        </a>
-        <a href="https://gitee.com/xiaonuobase/snowy">
-            <img src="https://gitee.com/xiaonuobase/snowy/badge/fork.svg?theme=dark" alt="Gitee fork">
-        </a>
-        <a href="https://www.antdv.com/docs/vue/introduce-cn/">
-            <img src="https://img.shields.io/badge/vue-3-blue.svg" alt="bootstrap">
-        </a> 
-        <a href="http://spring.io/projects/spring-boot">
-            <img src="https://img.shields.io/badge/vite-5-green.svg" alt="spring-boot">
-        </a>
-        <a href="https://www.antdv.com/docs/vue/introduce-cn/">
-            <img src="https://img.shields.io/badge/vue--ant--design-4-blue.svg" alt="bootstrap">
-        </a> 
-        <a href="http://spring.io/projects/spring-boot">
-            <img src="https://img.shields.io/badge/spring--boot-3-green.svg" alt="spring-boot">
-        </a>
-        <a href="http://mp.baomidou.com">
-            <img src="https://img.shields.io/badge/mybatis--plus-3-blue.svg" alt="mybatis-plus">
-        </a>  
-        <a href="./LICENSE">
-            <img src="https://img.shields.io/badge/license-Apache%202-red" alt="license Apache 2.0">
-        </a>
-        <a href="https://old.murphysec.com/dr/mQ1xAybeOLMLOxH8pU" alt="OSCS Status">
-            <img src="https://www.oscs1024.com/platform/badge//xiaonuobase/snowy.git.svg?size=small"/>
-        </a>
-    </p>
-</p>
+| 端 | 技术 |
+|----|------|
+| 后端 | Java 17 · Spring Boot 3.5.9 · MyBatis-Plus · Sa-Token · Knife4j · PostgreSQL · Redis/Redisson · dynamic-datasource + Druid · x-file-storage · 国密 SM2/SM3/SM4 |
+| 管理端前端 | Vue 3 · Vite 5 · Ant Design Vue 4（`zy-web`） |
+| 画布前端 | React · Vite · infinite-canvas 二次开发（`canvas-web`） |
+| AI 网关 | 自研 `zyapi` 层对接 NewApi（OpenAI 兼容）/ ComfyUI，文/图/视频生成异步任务 |
 
-## 快速链接
+## 核心能力
 
-gitee下载地址：[https://gitee.com/xiaonuobase/snowy](https://gitee.com/xiaonuobase/snowy)
+- **短剧创作**：项目 / 章节单元 / 分镜 / 分镜版本与产物管理
+- **素材资产**：素材库、候选素材、素材文件夹（多级归类）
+- **技能库**：创作技能（含提示词模板、智能体模板）与分享
+- **AI 生成任务**：文本 / 图片 / 视频生成，异步任务调度 + 轮询 + SSE 实时推送
+- **智能体对话**：会话与智能体聊天，支持画布工作流编排
+- **团队协作**：团队与成员管理
+- **平台底座**：用户 / 组织 / 角色 / 菜单 / 权限、开发工具（配置、字典、文件、定时任务、日志、消息）、代码生成
 
-github下载地址（镜像）：[https://github.com/xiaonuobase/Snowy](https://github.com/xiaonuobase/Snowy)
+## 目录结构
 
-gitcode下载地址：[https://gitcode.com/xiaonuobase/Snowy](https://gitcode.com/xiaonuobase/Snowy)
+```
+zy/
+├── pom.xml              聚合 POM（artifactId=zy，zy.version=3.0.0）
+├── zy-common/           基础通用模块
+├── zy-plugin/           业务插件聚合
+│   ├── zy-plugin-auth/  登录鉴权
+│   ├── zy-plugin-biz/   业务功能
+│   ├── zy-plugin-client/ C 端功能
+│   ├── zy-plugin-dev/   开发工具（配置/字典/文件/定时/日志/消息）
+│   ├── zy-plugin-gen/   代码生成
+│   ├── zy-plugin-mobile/ 移动端管理
+│   ├── zy-plugin-sys/   系统功能（用户/组织/角色/菜单/按钮）
+│   └── zy-plugin-canvas/ ★ 本项目定制：AI 画布 / 短剧业务插件
+├── zy-plugin-api/       插件 API 聚合（zy-plugin-*-api，跨插件调用解耦）
+├── zy-web-app/          主启动模块（jar，端口 82，应用名 zy）
+├── zy-web/              管理端前端（Vue3，默认端口 83）
+└── canvas-web/          画布前端（React，独立 git 仓库）
+```
 
-演示地址：[https://snowy.xiaonuo.vip](https://snowy.xiaonuo.vip)
-
-文档地址：[https://xiaonuo.vip/doc](https://xiaonuo.vip/doc)
-
-## 商业产品
-
-- 如果开源版本不能满足您的需求，还可以看看我们官方推出的基于开源版开发的商业化产品
-
-<table>
-    <colgroup>
-        <col style="width: 25%"/>
-        <col style="width: 20%"/>
-        <col style="width: 55%"/>
-    </colgroup>
-    <thead>
-        <tr><th>产品名称</th><th>演示</th><th>用途</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>AI智能化零代码开发平台</td>
-            <td><a href="https://alsc.xiaonuo.vip">https://alsc.xiaonuo.vip</a></td>
-            <td>AI智能驱动，拖拉拽即可搭建业务系统，无需编写一行代码。</td>
-        </tr>
-        <tr>
-            <td>国产数据中台</td>
-            <td><a href="https://data.xiaonuo.vip">https://data.xiaonuo.vip</a></td>
-            <td>覆盖数据采集、存储、治理、安全、资产化、服务全流程的一站式数据管理平台。</td>
-        </tr>
-        <tr>
-            <td>统一身份认证平台</td>
-            <td><a href="https://iam.xnark.com">https://iam.xnark.com</a></td>
-            <td>一款企业级统一身份认证平台，全面支持 OAuth、SAML、JWT、CAS 等主流协议，既可作为 IDP 构建企业统一认证中心，也可作为 SP 对接第三方身份源，一个平台统管身份认证、单点登录与权限体系。</td>
-        </tr>
-        <tr>
-            <td>AI大模型平台</td>
-            <td><a href="https://ai.xnark.com">https://ai.xnark.com</a></td>
-            <td>一站式企业级AI应用平台，覆盖从大模型接入、智能体搭建、知识库管理到应用发布的全链路，让企业零门槛构建和运营自己的AI能力。</td>
-        </tr>
-    </tbody>
-</table>
+> Java 包名保持框架原生 `vip.xiaonuo.*`；业务实体/表前缀统一 `zy_`。
 
 ## 快速启动
 
-全栈工程师推荐idea
+### 后端
 
-### 前端支撑
+环境要求：JDK 17、Maven、PostgreSQL、Redis。
 
-| 插件      | 版本  | 用途             |
-|---------|-----|----------------|
-| node.js | ≥18 | JavaScript运行环境 |
+1. 创建数据库 `zy-new`（PostgreSQL），执行业务建表脚本（见各插件 `_sql` / 开发文档）
+2. 修改 `zy-web-app/src/main/resources/application.properties` 中数据源、Redis 等配置
+3. 启动主类 `vip.xiaonuo.Application`（默认端口 **82**）
+4. 接口文档：`http://localhost:82/doc.html`（Knife4j，按插件分组）
 
-### 启动前端
+### 管理端前端（zy-web）
 
-```
+```bash
+cd zy-web
 npm install
+npm run dev   # 默认 83 端口
 ```
 
-```
+### 画布前端（canvas-web）
+
+```bash
+cd canvas-web
+npm install
 npm run dev
 ```
 
-### 后端支撑
+## 配置速查
 
-| 插件     | 版本        | 用途     |
-|--------|-----------|--------|
-| jdk    | 17        | java环境 |
-| lombok | idea内     | 代码简化插件 |
-| maven  | 最新版       | 包管理工具  |
-| redis  | 最新版       | 缓存库    |
-| mysql  | 8.0 / 5.7 | 数据库    |
+| 项 | 值 |
+|----|----|
+| 服务端口 | 82 |
+| 数据库 | PostgreSQL `zy-new`（`application.properties` 可切换 MySQL 等） |
+| Redis | `127.0.0.1:6379`，database=1 |
+| 鉴权 | Sa-Token 双体系（B 端 `StpUtil` / C 端 `StpClientUtil`） |
+| AI 任务 | `task.worker.*` 配置（并发、轮询间隔、超时、重试） |
 
-### 启动后端
+## 文档
 
-开发工具内配置好maven并在代码中配置数据库即可启动
+- [后端架构与项目结构规范](./后端架构与项目结构规范.md)
 
-## 代码结构
+## 致谢
 
-Snowy3.0框架对代码以插件化的模式进行分包，使得包层级结构更加清晰合理，同时降低了耦合度，关于插件模块化开发的规范请查阅文档【SNOWY开源文档——前端手册or后端手册——开发规范】板块。
+- 后端框架：[Snowy / SnowyAdmin](https://gitee.com/xiaonuobase/snowy)（Apache-2.0）
+- 画布前端：[infinite-canvas](https://github.com/ddiu8081/infinite-canvas) 及其生态
 
-```
-snowy
-  |-snowy-admin-web == 前端
-    |-public == 基础静态文件
-    |-src == 前端源代码
-      |-api == API接口转发
-      |-assets == 静态文件
-      |-components == VUE组件
-      |-config == 基础配置
-      |-layout == 基础布局
-      |-locales == 多语言配置
-      |-router == 基础路由配置
-      |-store == Pinia缓存配置
-      |-style == 样式风格配置
-      |-utils == 工具类
-      |-views == 所有视图界面
-  |-snowy-common == 基础通用模块
-  |-snowy-plugin == 插件包
-    |-snowy-plugin-auth == 登录鉴权插件
-    |-snowy-plugin-biz == 业务功能插件
-    |-snowy-plugin-client == C端功能插件
-    |-snowy-plugin-dev == 开发工具插件
-    |-snowy-plugin-gen == 代码生成插件
-    |-snowy-plugin-mobile == 移动端管理插件
-    |-snowy-plugin-sys == 系统功能插件
-  |-snowy-plugin-api == 插件api包
-    |-snowy-plugin-auth-api == 登录鉴权插件api接口
-    |-snowy-plugin-biz-api == 业务功能插件api接口
-    |-snowy-plugin-client-api == C端功能插件api接口
-    |-snowy-plugin-dev-api == 开发工具插件api接口
-    |-snowy-plugin-gen == 代码生成插件api接口
-    |-snowy-plugin-mobile == 移动端管理插件api接口
-    |-snowy-plugin-sys-api == 系统功能插件api接口
-  |-snowy-web-app == 主启动模块
-```
+## License
 
-## 分支说明
-
-- master
-
-正式稳定版本，具体版本升级内容看更新标签
-
-- dev
-
-团队开发的分支（代码可能随时会推，不保证运行和使用）
-
-- snowy1.8
-
-1.x分支，目前已停止新增功能，只限于bug的维护，推荐使用2x版本
-
-- snowy2.5
-
-2.x分支，目前已停止新增功能，只限于bug的维护，可以平滑过渡至3x版本
-
-## 视频教程
-
-教程地址（免费开放）：[https://space.bilibili.com/50101698/channel/collectiondetail?sid=739071](https://space.bilibili.com/50101698/channel/collectiondetail?sid=739071)
-
-<img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9mhLatA%7D%2F&_etag=1730700699-816553&shareID=-9mhLatA"/>
-
-作者也在上班工作，所以在利用休息时间为大家创作，录制视频的目的也是为各位小伙伴提供文档跟技术交流群聊之外的上手学习资料
-
-> 视频由小诺开源技术团队王同学（每天一点）进行录制
-
-## 架构原理
-
-* 业务架构
-
-<p align="center">
-    <img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9lQAEoQ%7D%2F&_etag=1730690514-197232&shareID=-9lQAEoQ"/>
-</p>
-
-* 应用架构
-
-<p align="center">
-    <img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9lPMbxA%7D%2F&_etag=1730690514-308767&shareID=-9lPMbxA"/>
-</p>
-
-* 数据架构
-
-<p align="center">
-    <img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9lQja5Q%7D%2F&_etag=1730690514-322422&shareID=-9lQja5Q"/>
-</p>
-
-* 技术架构
-
-<p align="center">
-    <img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9lQxASg%7D%2F&_etag=1730690514-152387&shareID=-9lQxASg"/>
-</p>
-
-* 部署架构
-
-<p align="center">
-    <img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9lRBZAw%7D%2F&_etag=1730690514-222880&shareID=-9lRBZAw"/>
-</p>
-
-## 效果展示
-
-<table>
-    <tr>
-        <td><img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9lSg_Dw%7D%2F&_etag=1730384489-1272624&shareID=-9lSg_Dw"/></td>
-        <td><img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9lTCIQQ%7D%2F&_etag=1730384527-354571&shareID=-9lTCIQQ"/></td>
-    </tr>
-    <tr>
-        <td><img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9lTUROA%7D%2F&_etag=1730384568-327201&shareID=-9lTUROA"/></td>
-        <td><img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9lTdB3A%7D%2F&_etag=1730384595-160612&shareID=-9lTdB3A"/></td>
-    </tr>
-    <tr>
-        <td><img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9lTp1iw%7D%2F&_etag=1730384617-182491&shareID=-9lTp1iw"/></td>
-        <td><img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9lTyI5g%7D%2F&_etag=1730384636-144484&shareID=-9lTyI5g"/></td>
-    </tr>
-    <tr>
-        <td><img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9lUAj9A%7D%2F&_etag=1730384732-148422&shareID=-9lUAj9A"/></td>
-        <td><img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9lUWvfg%7D%2F&_etag=1730384836-112114&shareID=-9lUWvfg"/></td>
-    </tr>
-    <tr>
-        <td><img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9lUuk7g%7D%2F&_etag=1730384925-320963&shareID=-9lUuk7g"/></td>
-        <td><img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9mJCOTw%7D%2F&_etag=1730385032-172917&shareID=-9mJCOTw"/></td>
-    </tr>
-    <tr>
-        <td><img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9mJSKTQ%7D%2F&_etag=1730385077-142012&shareID=-9mJSKTQ"/></td>
-        <td><img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9mJfjcg%7D%2F&_etag=1730385168-168192&shareID=-9mJfjcg"/></td>
-    </tr>
-</table>
-
-## 密码分步
-
-| 功能     | 算法类型                 |
-|--------|----------------------|
-| 登录     | SM2前端加密，后端解密         |
-| 登录登出日志 | SM2对登录登出日志做签名完整性保护存储 |
-| 操作日志   | SM2对操作日志做签名完整性保护存储   |
-| 用户密码   | SM3完整性保护存储，登录时做完整性校验 |
-| 用户手机号  | SM4（cbc模式）加解密使用字段脱敏  |
-
-## 官方群聊
-
-QQ技术群：732230670（已满）、685395081
-
-微信技术群：
-
-因群达到200人以上，需加微信拉群，禁止群内艾特群主及管理员，私信提问技术问题无时间精力回答，请群内互动互助交流技术才是建群的意义
-
-<table>
-    <tr>
-        <td>微信群</td>
-        <td><img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9mUnPEw%7D%2F&_etag=1730699307-193261&shareID=-9mUnPEw" width="120"/></td>
-    </tr>
-</table>
-
-## 示例代码
-
-从 v3.6.0，我们把前端示例的一些界面文件拿到了另外一个仓库，使用时可以自行下载：[https://gitee.com/xiaonuoadmin/snowy-exm](https://gitee.com/xiaonuoadmin/snowy-exm)
-
-## 代码贡献
-
-近期有很多热心开源的小伙伴陆续为咱们Snowy框架提交PR或者提出好的建议，基本合格的PR我们都接受，这样您的头像就列入到咱们Snowy仓库的贡献者列表啦！
-
-如何贡献
-
-1、fork一份代码至自己的账号下，本地修改您要提的代码，提交至您fork的仓库
-
-2、登录gitee后到Snowy仓库下创建Pull Requests,选择您的仓库到Snowy的dev分支，提交即可
-
-因为dev分支是团队开发分支，并不是统一发版本的测试过的，所以我们建议提代码至dev即可
-
-## 外包开发
-
-如果您（或您公司）有外包开发需求，可以通过联系客服方式，提交您的需求，经过工作量分析，出具合适的报价，合作开发并交付。
-
-本团队具备雄厚的技术人才力量，均跟随小诺团队发展至今，已完全熟练每一处细节代码，您的产品自然也是由Snowy平台进行开发并交付。
-
-1、工期保障
-2、源码质量保障
-3、节点按时汇报
-
-## 团队成员
-
-| 成员  | 技术 |  昵称   |
-|:---:|:--:|:-----:|
-| 俞宝山 | 全栈 |  俞宝山  |
-| 徐玉祥 | 全栈 | 就是那个锅 |
-| 董夏雨 | 全栈 |  阿董   |
-| 王鹏  | 全栈 | 每天一点  |
-| 陈心雨 | 前端 |   .   |
-
-## 曾获荣誉
-
-🔥 **2021年度OSC中国开源项目评选-最受欢迎项目**
-
-🔥 **2022年度OSC中国开源项目评选-最火热中国开源项目社区**
-
-🔥 **2024 GitCode项目毕业认证-G-Star优秀毕业项目**
-
-🔥 **2024 GitCode开源共创大会-十大新锐项目**
-
-🔥 **2024中国互联网发展创新与投资大赛（开源）-优秀奖**
-
-🔥 **2025年度GitCode百大开源项目**
-
-🔥 **2025年度Gitee开源项目Web应用开发赛道Top3**
-
-<table>
-    <tr>
-        <td style="width: 50%"><img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9mLM-zg%7D%2F&_etag=1730698398-294375&shareID=-9mLM-zg"/></td>
-        <td style="width: 50%"><img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9mLtqmQ%7D%2F&_etag=1730698444-77496&shareID=-9mLtqmQ"/></td>
-    </tr>
-    <tr>
-        <td style="width: 50%"><img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A-9nmI4yQ%7D%2F&_etag=1730707931-764633&shareID=-9nmI4yQ"/></td>
-        <td style="width: 50%"><img src="https://pan.xiaonuo.vip/?explorer/share/fileOut&path=%7BshareItemLink%3A_COsphyQ%7D%2F&_etag=1732688010-447888&shareID=_COsphyQ"/></td>
-    </tr>
-    <tr>
-        <td style="width: 50%"><img src="https://pan.xiaonuo.vip/?explorer/share/file&hash=5f35-ed_a3_uGz1INMaJhSNbI6ixk370tTV5JR0whVe5n8ALraGqmEvRQQMoqeV-Gbs"/></td>
-        <td style="width: 50%"><img src="https://pan.xiaonuo.vip/?explorer/share/file&hash=f6618VQ6vkSFTY9v8sg-7ahUp0Zj6Q33y2zL6LUL63_yDOa0xN4TW31IRrrBZZ836AE"/></td>
-    </tr>
-    <tr>
-        <td style="width: 50%"><img src="https://pan.xiaonuo.vip/?explorer/share/file&hash=6dc31rfG5KA1l0nQukMmUm7gEufv6r5Q98iTgZyHbaPhjvGR-h6h77cvZ1DmBC5D_rY"/></td>
-        <td style="width: 50%"><img src="https://pan.xiaonuo.vip/?explorer/share/file&hash=d7cfk0ftuw2tl1bAL42bl2wgk7sgcm-Z4ULwZu5TIjp4zsvmKBkYfGIoY48Buc4H0s0"/></td>
-    </tr>
-</table>
-
-## 版权说明
-
-- Snowy生态技术框架全系版本采用 Apache License2.0协议
-
-- 代码可用于个人项目等接私活或企业项目脚手架使用，Snowy全系开源版完全免费
-
-- 二次开源不可参与同类竞争，可在其他赛道进行，有好的案例可以提供，我们会挂在本页进行宣传
-
-- 请不要删除和修改Snowy源码头部的版权与作者声明及出处
+本项目基于 **Apache License 2.0** 开源协议发布；沿用上游框架的版权与作者声明。
