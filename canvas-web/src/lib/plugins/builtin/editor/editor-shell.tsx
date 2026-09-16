@@ -16,7 +16,7 @@ const manifest: PluginManifestV2 = {
     name: "剪辑工作台（壳）",
     version: "0.1.0",
     description: "编辑器预设插件垂直切片：注册时间线面板插槽，验证 v2 插件插槽注册→渲染链路。",
-    author: "诚迈科技团队",
+    author: "光稿团队",
     surfaces: ["fullscreen"],
     permissions: ["timeline.read", "timeline.command", "export.run"],
     trusted: true,

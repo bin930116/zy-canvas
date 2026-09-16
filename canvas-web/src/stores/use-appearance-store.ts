@@ -5,7 +5,7 @@ import { applySkinTheme, DEFAULT_CLASSIC_SKIN, normalizeSkinDefinition } from "@
 
 export const DEFAULT_PUBLIC_APPEARANCE: PublicAppearance = {
     schemaVersion: 6,
-    brandName: "诚迈科技",
+    brandName: "光稿",
     brandSlug: "open-ai-canvas",
     authHeroTitle: "让一个故事，\n从文字走向银幕。",
     authHeroDescription: "",
@@ -16,10 +16,10 @@ export const DEFAULT_PUBLIC_APPEARANCE: PublicAppearance = {
     authVideoPosterUrl: "/auth-video-poster.jpg",
     skinId: "classic",
     activeSkin: DEFAULT_CLASSIC_SKIN,
-    seoTitle: "诚迈科技",
-    seoDescription: "诚迈科技，面向 AI 影视与短剧创作的工作台。",
+    seoTitle: "光稿",
+    seoDescription: "光稿，面向 AI 影视与短剧创作的工作台。",
     seoKeywords: "",
-    footerCopyright: `© ${new Date().getFullYear()} 诚迈科技. All rights reserved.`,
+    footerCopyright: `© ${new Date().getFullYear()} 光稿. All rights reserved.`,
     icpFilingEnabled: false,
     icpFilingNumber: "",
     logoConfigured: true,

@@ -209,7 +209,7 @@ export function buildAiEditingSystemPrompt(timelineSummary: string): string {
         (entry) => `- ${entry.op}：${entry.desc}。payload：${entry.payload}`,
     ).join("\n");
     return [
-        "你是诚迈科技视频剪辑工作台的 AI 剪辑助手。根据用户指令对时间线输出受约束的编辑命令 JSON。",
+        "你是光稿视频剪辑工作台的 AI 剪辑助手。根据用户指令对时间线输出受约束的编辑命令 JSON。",
         "时间线当前状态：",
         timelineSummary,
         "可用命令契约（与编辑器同源，非法命令会被整批拒绝）：",
